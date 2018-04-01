@@ -1,6 +1,6 @@
 /**
  * @author Yoannes
- * @version 1.0
+ * @version 1.0.1
  * @license MIT
  */
 
@@ -9,6 +9,8 @@
  * Init table function
  * @param {string}   el                 - ID or class of the element
  * @param {object}   params             - Params of the table
+ * @param {object}   params.hover       - Uses hover class from Bootstrap
+ * @param {object}   params.striped     - Uses striped class from Bootstrap
  * @param {object}   params.rowsPerPage - Number of rows per page. Default 5
  * @param {array}    params.headers     - Array of headers of the table
  * @param {array}    params.data        - Array of data of the table
@@ -16,7 +18,6 @@
  * @param {number}   params.searchDelay - Delay on search input in ms
  */
 function YoTables(el, params) {
-  // var v, i;
   var element = document.querySelector(el);
   var yoTablesId = 'yoTables-'+ element.id;
   var originalData = [];
@@ -26,6 +27,8 @@ function YoTables(el, params) {
   var totalPages = 0;
   var rowsPerPage = 0;
   var onClick = params.onClick;
+  var hover = params.hover ? params.hover : true;
+  var striped = params.striped ? params.striped : true;
   var searchDelay = params.searchDelay ? params.searchDelay : 300;
 
   // CREATE ROW/COL HTML
@@ -39,6 +42,8 @@ function YoTables(el, params) {
       if (headers[colId].style) {
         tdStyle.push(headers[colId].style.join(';'));
       }
+      if (onClick)
+        tdStyle.push('cursor: pointer');
 
       colHtml += '<td class="'+ tdClass.join(' ') +'" style="'+ tdStyle.join(' ') +'" data-coords="['+rowId+','+colId+']">'+ tdContent.join(' ') +'</td>';
     }
@@ -169,7 +174,7 @@ function YoTables(el, params) {
           '<input type="text" class="form-control" id="yoTablesSearchInput" placeholder="Search" value="'+(searchEl ? searchEl.value : '')+'">' +
         '</div>' +
       '</div>' +
-      '<table class="yoTables-table table">'+thead + tbody+'</table>' +
+      '<table class="yoTables-table table '+(hover ? 'table-hover' : '')+' '+(striped ? 'table-striped' : '')+'">'+thead + tbody+'</table>' +
       '<div class="yoTables-pagination"></div>';
 
     createPagination(currentPage);
