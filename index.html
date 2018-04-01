@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>yoTables</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="container-fluid">
+  <h3>Example</h3>
+  <br>
+  <div id="table"></div>
+  <hr>
+  <span>Edit</span>
+  <div class="row">
+    <div class="col-6">
+      <table style="width: 100%">
+        <tr>
+          <td><input type="text" id="row1" class="form-control" value="0"></td>
+          <td><input type="text" id="col1" class="form-control" value="0"></td>
+        </tr>
+        <tr>
+          <td colspan="2"><textarea id="content1" class="form-control">Edit the first cell</textarea></td>
+        </tr>
+        <tr>
+          <td><button type="button" class="btn btn-primary" onclick="editCell()">Edit Cell</button></td>
+        </tr>
+      </table>
+    </div>
+    <div class="col-6">
+      <table style="width: 100%">
+        <tr>
+          <td><input type="text" id="row2" class="form-control" value="1"></td>
+        </tr>
+        <tr>
+          <td><textarea id="content2" class="form-control">["Edit col 1", "Edit col 2"]</textarea></td>
+        </tr>
+        <tr>
+          <td><button type="button" class="btn btn-primary" onclick="editRow()">Edit Row</button></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="yoTables.js"></script>
+<script>
+  var table;
+
+  $.getJSON("data.json", function(json) {
+    var keys = Object.keys(json[0]);
+    var heading = [];
+    var data = [];
+
+    for (var i=0; i < keys.length; i++) {
+      heading.push({name: keys[i]});
+    }
+
+    var loopHeading = function (v) {
+      var ans = [];
+      for (var i=0; i < heading.length; i++) {
+        ans.push(v[heading[i].name])
+      }
+      return ans;
+    };
+
+    for (var i=0; i < json.length; i++) {
+      var v = json[i];
+
+      data.push(loopHeading(v));
+    }
+    // console.log(heading, data);
+
+    table = new YoTables("#table", {
+      headers: heading,
+      data: data,
+      onClick: function (coords, row) {
+        console.log('clicked row. Coords:', coords, 'row:', row);
+
+        $('#row1').val(coords[0]);
+        $('#col1').val(coords[1]);
+        $('#content1').val(table.getCell(coords));
+
+        $('#row2').val(coords[0]);
+        $('#content2').val(JSON.stringify(table.getRow(coords)));
+      }
+    });
+    console.log(table);
+  });
+
+  function editCell() {
+    var coords = [
+      parseInt($('#row1').val()),
+      parseInt($('#col1').val())
+    ];
+    var data = $('#content1').val();
+
+    table.updateCell(coords, data);
+  }
+
+  function editRow() {
+    var coords = [
+      parseInt($('#row2').val())
+    ];
+    var data = JSON.parse($('#content2').val());
+
+    table.updateRow(coords, data);
+  }
+
+</script>
+</body>
+</html>
