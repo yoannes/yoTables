@@ -14,7 +14,7 @@
   <hr>
   <span>Edit</span>
   <div class="row">
-    <div class="col-6">
+    <div class="col-4">
       <table style="width: 100%">
         <tr>
           <td><input type="text" id="row1" class="form-control" value="0"></td>
@@ -28,7 +28,7 @@
         </tr>
       </table>
     </div>
-    <div class="col-6">
+    <div class="col-4">
       <table style="width: 100%">
         <tr>
           <td><input type="text" id="row2" class="form-control" value="1"></td>
@@ -38,6 +38,20 @@
         </tr>
         <tr>
           <td><button type="button" class="btn btn-primary" onclick="editRow()">Edit Row</button></td>
+        </tr>
+      </table>
+    </div>
+    <div class="col-4">
+      <table style="width: 100%">
+        <tr>
+          <td><input type="text" id="headerName" class="form-control" value="id"></td>
+          <td><input type="text" id="headerVal" class="form-control" value="1"></td>
+        </tr>
+        <tr>
+          <td colspan="2"><textarea id="content3" class="form-control">["Edit col 1", "Edit col 2"]</textarea></td>
+        </tr>
+        <tr>
+          <td><button type="button" class="btn btn-primary" onclick="editFromHeader()">Edit From header</button></td>
         </tr>
       </table>
     </div>
@@ -81,16 +95,21 @@
       data: data,
       hover: true,
       striped: true,
+      searchable: false,
       rowsPerPage: 5,
       onClick: function (coords, row) {
         console.log('clicked row. Coords:', coords, 'row:', row);
+        var data = table.getRow(coords) ;
 
         $('#row1').val(coords[0]);
         $('#col1').val(coords[1]);
         $('#content1').val(table.getCell(coords));
 
         $('#row2').val(coords[0]);
-        $('#content2').val(JSON.stringify(table.getRow(coords)));
+        $('#content2').val(JSON.stringify(data));
+
+        $('#headerVal').val(data[0]);
+        $('#content3').val(JSON.stringify(data));
       }
     });
     console.log(table);
@@ -113,6 +132,11 @@
     var data = JSON.parse($('#content2').val());
 
     table.updateRow(coords, data);
+  }
+
+  function editFromHeader() {
+    var data = JSON.parse($('#content3').val());
+    table.updateFromHeader($('#headerName').val(), $('#headerVal').val(), data)
   }
 
 </script>

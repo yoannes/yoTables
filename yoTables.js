@@ -1,6 +1,6 @@
 /**
  * @author Yoannes
- * @version 1.0.1
+ * @version 1.0.2
  * @license MIT
  */
 
@@ -15,6 +15,7 @@
  * @param {array}    params.headers     - Array of headers of the table
  * @param {array}    params.data        - Array of data of the table
  * @param {function} params.onClick     - Callback function when row is clicked
+ * @param {number}   params.searchable  - Search option in table
  * @param {number}   params.searchDelay - Delay on search input in ms
  */
 function YoTables(el, params) {
@@ -29,6 +30,8 @@ function YoTables(el, params) {
   var onClick = params.onClick;
   var hover = params.hover ? params.hover : true;
   var striped = params.striped ? params.striped : true;
+  var searchable = params.searchable ? params.searchable : true;
+
   var searchDelay = params.searchDelay ? params.searchDelay : 300;
 
   // CREATE ROW/COL HTML
@@ -164,25 +167,30 @@ function YoTables(el, params) {
       h += v.html;
     }
 
-    var searchEl = document.querySelector('#yoTablesSearchInput');
     var thead = '<thead class="yoTables-thead"><tr>'+ h +'</tr></thead>';
     var tbody = '<tbody class="yoTables-tbody">'+ createRows(rowsPerPage, currentPage, data) +'</tbody>';
-
-    element.innerHTML =
-      '<div class="yoTables-header">' +
+    var searchEl = document.querySelector('#yoTablesSearchInput');
+    var search = '';
+    if (searchable) {
+      search =
         '<div class="float-right" style="width: 200px; margin-bottom: 5px">' +
           '<input type="text" class="form-control" id="yoTablesSearchInput" placeholder="Search" value="'+(searchEl ? searchEl.value : '')+'">' +
-        '</div>' +
-      '</div>' +
+        '</div>';
+    }
+
+    element.innerHTML =
+      '<div class="yoTables-header">' + search + '</div>' +
       '<table class="yoTables-table table '+(hover ? 'table-hover' : '')+' '+(striped ? 'table-striped' : '')+'">'+thead + tbody+'</table>' +
       '<div class="yoTables-pagination"></div>';
 
     createPagination(currentPage);
 
-    searchEl = document.querySelector('#yoTablesSearchInput');
-    if (searchEl) {
-      searchEl.focus();
-      searchEl.selectionStart = searchEl.selectionEnd = searchEl.value.length;
+    if (searchable) {
+      searchEl = document.querySelector('#yoTablesSearchInput');
+      if (searchEl) {
+        searchEl.focus();
+        searchEl.selectionStart = searchEl.selectionEnd = searchEl.value.length;
+      }
     }
 
 
@@ -320,6 +328,35 @@ function YoTables(el, params) {
       data[rowId].data = newData;
       data[rowId].html = rowHtml(rowId, newData);
       // console.log(data[rowId]);
+    }
+  };
+
+  this.updateFromHeader = function (headerName, val, newData) {
+    // LOOP HEADERS TO GET colId
+    for (var colId=0; colId < headers.length; colId++) {
+      if (headers[colId].name === headerName) {
+
+        // LOOP DATA TO GET rowId
+        for (var rowId=0; rowId < data.length; rowId++) {
+          if (data[rowId].data[colId].toString() === val.toString()) {
+
+            // UPDATE ROW'S DATA
+            for (var i=0; i < headers.length; i++) {
+              var elClass = [yoTablesId, 'td', rowId, i].join('-');
+              var cell = document.querySelector('.'+ elClass);
+              cell.innerHTML = newData[i];
+            }
+
+            // UPDATE OBJECT WITH NEW DATA
+            data[rowId].data = newData;
+            data[rowId].html = rowHtml(rowId, newData);
+
+            break;
+          }
+        }
+
+        break;
+      }
     }
   };
 
