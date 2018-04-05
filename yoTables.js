@@ -28,9 +28,9 @@ function YoTables(el, params) {
   var totalPages = 0;
   var rowsPerPage = 0;
   var onClick = params.onClick;
-  var hover = params.hover ? params.hover : true;
-  var striped = params.striped ? params.striped : true;
-  var searchable = params.searchable ? params.searchable : true;
+  var hover = 'hover' in params ? params.hover : true;
+  var striped = 'striped' in params ? params.striped : true;
+  var searchable = 'searchable' in params ? params.searchable : true;
 
   var searchDelay = params.searchDelay ? params.searchDelay : 300;
 
@@ -133,7 +133,9 @@ function YoTables(el, params) {
 
     $(".yoTables-pagination-item")
       .off('click.tables')
-      .on('click.tables', function () {
+      .on('click.tables', function (ev) {
+        ev.preventDefault();
+
         var p = $(this).data('yotablespage');
         if (p === "SKIP") return;
 
@@ -306,9 +308,11 @@ function YoTables(el, params) {
         var cell = document.querySelector('.'+ elClass);
         var rowData = data[rowId].data;
 
-        rowData[colId] = newData;
-        cell.innerHTML = newData;
-        data[rowId].html = rowHtml(rowId, rowData);
+        if (cell) {
+          rowData[colId] = newData;
+          cell.innerHTML = newData;
+          data[rowId].html = rowHtml(rowId, rowData);
+        }
 
         // console.log(elClass, cell, data[rowId]);
       }
@@ -322,7 +326,8 @@ function YoTables(el, params) {
       for (var colId=0; colId < headers.length; colId++) {
         var elClass = [yoTablesId, 'td', rowId, colId].join('-');
         var cell = document.querySelector('.'+ elClass);
-        cell.innerHTML = newData[colId];
+        if (cell)
+          cell.innerHTML = newData[colId];
       }
 
       data[rowId].data = newData;
@@ -344,7 +349,8 @@ function YoTables(el, params) {
             for (var i=0; i < headers.length; i++) {
               var elClass = [yoTablesId, 'td', rowId, i].join('-');
               var cell = document.querySelector('.'+ elClass);
-              cell.innerHTML = newData[i];
+              if (cell)
+                cell.innerHTML = newData[i];
             }
 
             // UPDATE OBJECT WITH NEW DATA
@@ -375,7 +381,3 @@ function YoTables(el, params) {
   };
 
 }
-
-
-
-
