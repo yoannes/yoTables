@@ -218,7 +218,17 @@ function YoTables(el, params) {
     var i, v;
     var loopRow = function (row) {
       for (var i=0; i < row.length; i++) {
-        if (row[i].toString().search(val) > -1)
+        var v;
+        if (!/<[a-z][\s\S]*>/i.test(row[i])) {
+          v = row[i].toString().toLowerCase();
+        }
+        else {
+          var $e = $(row[i]);
+          v = $e.val() || $e.text();
+          v = v.toString().toLowerCase();
+        }
+
+        if (v.search(val) > -1)
           return true;
       }
     };
