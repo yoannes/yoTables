@@ -1,6 +1,6 @@
 /**
  * @author Yoannes
- * @version 1.0.2
+ * @version 1.0.3
  * @license MIT
  */
 
@@ -171,14 +171,18 @@ function YoTables(el, params) {
 
     var thead = '<thead class="yoTables-thead"><tr>'+ h +'</tr></thead>';
     var tbody = '<tbody class="yoTables-tbody">'+ createRows(rowsPerPage, currentPage, data) +'</tbody>';
-    var searchEl = document.querySelector('#yoTablesSearchInput');
+    var searchEl = document.querySelector('#'+yoTablesId+'-SearchInput');
     var search = '';
     if (searchable) {
       search =
         '<div class="float-right" style="width: 200px; margin-bottom: 5px">' +
-          '<input type="text" class="form-control" id="yoTablesSearchInput" placeholder="Search" value="'+(searchEl ? searchEl.value : '')+'">' +
+          '<input type="text" class="form-control" id="'+yoTablesId+'-SearchInput" placeholder="Search" value="'+(searchEl ? searchEl.value : '')+'">' +
         '</div>';
     }
+
+    $('.yoTables-header').remove();
+    $('.yoTables-table').remove();
+    $('.yoTables-pagination').remove();
 
     element.innerHTML =
       '<div class="yoTables-header">' + search + '</div>' +
@@ -188,7 +192,7 @@ function YoTables(el, params) {
     createPagination(currentPage);
 
     if (searchable) {
-      searchEl = document.querySelector('#yoTablesSearchInput');
+      searchEl = document.querySelector('#'+yoTablesId+'-SearchInput');
       if (searchEl) {
         searchEl.focus();
         searchEl.selectionStart = searchEl.selectionEnd = searchEl.value.length;
@@ -200,12 +204,12 @@ function YoTables(el, params) {
     if (onClick)
       clickListener();
 
-    $('#yoTablesSearchInput').on('keyup.tables', (function(){
+    $('#'+yoTablesId+'-SearchInput').off('keyup.tables').on('keyup.tables', (function(){
       var timer = 0;
       return function(){
         clearTimeout (timer);
         timer = setTimeout(function () {
-          var input = document.querySelector('#yoTablesSearchInput');
+          var input = document.querySelector('#'+yoTablesId+'-SearchInput');
           filter(input.value);
 
         }, searchDelay);
@@ -270,7 +274,11 @@ function YoTables(el, params) {
       .off('click.tables')
       .on('click.tables', function () {
         var dt = $(this).data('coords');
-        onClick(dt, data[dt[0]]);
+
+        if (originalData.length)
+          onClick(dt, originalData[dt[0]]);
+        else
+          onClick(dt, data[dt[0]]);
       });
   };
 
@@ -379,7 +387,11 @@ function YoTables(el, params) {
   this.getCell = function (coords) {
     var rowId = coords[0];
     var colId = coords[1];
-    var row = data[rowId].data;
+    var row;
+    if (originalData.length)
+      row = originalData[rowId].data;
+    else
+      row = data[rowId].data;
 
     return row[colId];
   };
@@ -387,7 +399,10 @@ function YoTables(el, params) {
   this.getRow = function (coords) {
     var rowId = coords[0];
 
-    return data[rowId].data;
+    if (originalData.length)
+      return originalData[rowId].data;
+    else
+      return data[rowId].data;
   };
 
 }
