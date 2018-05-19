@@ -62,7 +62,7 @@
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-<script src="yoTables.js"></script>
+<script src="dist/js.js"></script>
 <script>
   var table;
 
@@ -74,22 +74,29 @@
     for (var i=0; i < keys.length; i++) {
       heading.push({name: keys[i]});
     }
+    heading.push({name: "Icon", disableClick: true});
 
     var loopHeading = function (v) {
       var ans = [];
       for (var i=0; i < heading.length; i++) {
-        ans.push(v[heading[i].name])
+        if (heading[i].name === "Icon")
+          ans.push("asd");
+        else
+          ans.push(v[heading[i].name])
       }
       return ans;
     };
 
     for (var i=0; i < json.length; i++) {
       var v = json[i];
-
+      // console.log(loopHeading(v));
+      // console.log(v)
+      // console.log("......")
       data.push(loopHeading(v));
     }
-    console.log(JSON.stringify(heading), data);
 
+    // console.log(JSON.stringify(heading), data);
+    console.log(data[0]);
     table = new YoTables("#table", {
       headers: heading,
       data: data,
@@ -100,6 +107,8 @@
       onClick: function (coords, row) {
         console.log('clicked row. Coords:', coords, 'row:', row);
         var data = table.getRow(coords) ;
+
+        console.log(data);
 
         $('#row1').val(coords[0]);
         $('#col1').val(coords[1]);
@@ -112,7 +121,7 @@
         $('#content3').val(JSON.stringify(data));
       }
     });
-    console.log(table);
+
   });
 
   function editCell() {
