@@ -104,21 +104,19 @@
       striped: true,
       searchable: true,
       rowsPerPage: 5,
-      onClick: function (coords, row) {
-        console.log('clicked row. Coords:', coords, 'row:', row);
-        var data = table.getRow(coords) ;
-
-        console.log(data);
+      onClick: function (coords, dt) {
+        console.log('clicked coords:', coords, 'row:', dt);
+        // var data = table.getRow(coords) ;
 
         $('#row1').val(coords[0]);
         $('#col1').val(coords[1]);
-        $('#content1').val(table.getCell(coords));
+        $('#content1').val(dt[coords[1]]);
 
         $('#row2').val(coords[0]);
-        $('#content2').val(JSON.stringify(data));
+        $('#content2').val(JSON.stringify(dt));
 
-        $('#headerVal').val(data[0]);
-        $('#content3').val(JSON.stringify(data));
+        $('#headerVal').val(dt[0]);
+        $('#content3').val(JSON.stringify(dt));
       }
     });
 

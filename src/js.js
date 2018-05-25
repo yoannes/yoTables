@@ -7,16 +7,17 @@
 
 /**
  * Init table function
- * @param {string}   el                 - ID or class of the element
- * @param {object}   params             - Params of the table
- * @param {object}   params.hover       - Uses hover class from Bootstrap
- * @param {object}   params.striped     - Uses striped class from Bootstrap
- * @param {object}   params.rowsPerPage - Number of rows per page. Default 5
- * @param {array}    params.headers     - Array of headers of the table
- * @param {array}    params.data        - Array of data of the table
- * @param {function} params.onClick     - Callback function when row is clicked
- * @param {number}   params.searchable  - Search option in table
- * @param {number}   params.searchDelay - Delay on search input in ms
+ * @param {string}   el                 - ID or class of the element.
+ * @param {object}   params             - Params of the table.
+ * @param {object}   params.hover       - Uses hover class from Bootstrap.
+ * @param {object}   params.striped     - Uses striped class from Bootstrap.
+ * @param {object}   params.rowsPerPage - Number of rows per page. Default 5.
+ * @param {array}    params.headers     - Array of headers of the table.
+ * @param {array}    params.data        - Array of data of the table.
+ * @param {function} params.onClick     - Callback function when row is clicked.
+ * @param {number}   params.searchable  - Search option in table.
+ * @param {number}   params.searchDelay - Delay on search input in ms.
+ * @param {number}   params.autoAdd     - Add to data if not found when calling function updateFromHeader.
  */
 window.YoTables = function (el, params) {
   let element = document.querySelector(el);
@@ -24,7 +25,6 @@ window.YoTables = function (el, params) {
 
   let originalData = [];
   let data = [];
-  let displayData = [];
 
   let headers = [];
   let currentPage = 1;
@@ -34,6 +34,7 @@ window.YoTables = function (el, params) {
   let hover = params.hover === true;
   let striped = params.striped === true;
   let searchable = params.searchable === true;
+  let autoAdd = params.autoAdd !== false;
   let searchDelay = params.searchDelay ? params.searchDelay : 300;
 
   let rowsPerPage = 0;
@@ -46,7 +47,7 @@ window.YoTables = function (el, params) {
 
   // CREATE HEADERS HTML
   if (params.headers) {
-    console.log("headers", params.headers);
+    // console.log("headers", params.headers);
     for (let i=0; i < params.headers.length; i++) {
       let v = params.headers[i];
       headers.push({
@@ -78,7 +79,7 @@ window.YoTables = function (el, params) {
   function createRowHtml(rowId, colData) {
     let colHtml = '';
     for (let colId=0; colId < colData.length; colId++) {
-      let tdClass = [`${yoTablesId}-td`, `${yoTablesId}-td-${rowId}-${colId}`];
+      let tdClass = `${yoTablesId}-td ${yoTablesId}-td-${rowId}-${colId}`;
       let tdStyle = [];
       let tdContent = [colData[colId]];
 
@@ -88,10 +89,11 @@ window.YoTables = function (el, params) {
       if (onClick && !headers[colId].disableClick)
         tdStyle.push('cursor: pointer');
 
-      colHtml += `<td class="${tdClass.join(' ')}" style="${tdStyle.join(' ')}" data-coords="[${rowId},${colId}]">${tdContent.join(' ')}</td>`;
-    }
 
-    return `<tr class="${yoTablesId}-tr ${yoTablesId}-tr-${rowId}" data-rowid="${rowId}">${colHtml}</tr>`;
+      colHtml += `<td class="${tdClass}" style="${tdStyle.join(' ')}" data-coords="[${rowId}, ${colId}]">${tdContent.join(' ')}</td>`;
+    }
+    // console.log(colData);
+    return `<tr class="${yoTablesId}-tr ${yoTablesId}-tr-${rowId}" data-rowid="${rowId}" data-data='${JSON.stringify(colData)}'>${colHtml}</tr>`;
   }
 
   // CREATE ROWS HTML LIMITING THE QUANTITY PER PAGE
@@ -101,7 +103,6 @@ window.YoTables = function (el, params) {
     let end = start + rPerPage;
 
     for (let i=start; i < end; i++) {
-      console.log(i);
       if (i < data.length)
         h += createRowHtml(i, dt[i]);
     }
@@ -197,7 +198,7 @@ window.YoTables = function (el, params) {
     }
 
     if (document.querySelector(`.${yoTablesId}-header`)) {
-      console.log('update');
+      // console.log('update');
       $(`.${yoTablesId}-tbody`).html(getPageRowsHtml(rowsPerPage, currentPage, data ? data : originalData));
     }
     else {
@@ -302,13 +303,11 @@ window.YoTables = function (el, params) {
     $('.'+yoTablesId+'-td')
       .off('click.tables')
       .on('click.tables', function () {
-        let dt = $(this).data('coords');
+        let coords = $(this).data('coords');
+        let dt = $(this).parent().data('data');
 
-        if (!headers[dt[1]].disableClick) {
-          if (originalData.length)
-            onClick(dt, originalData[dt[0]]);
-          else
-            onClick(dt, data[dt[0]]);
+        if (!headers[coords[1]].disableClick) {
+          onClick(coords, dt);
         }
       });
   }
@@ -318,21 +317,33 @@ window.YoTables = function (el, params) {
       if (coords.length === 2) {
         let rowId = coords[0];
         let colId = coords[1];
-        let elClass = [yoTablesId, 'td', rowId, colId].join('-');
-        let cell = document.querySelector('.'+ elClass);
-        let rowData;
-        if (originalData.length)
-          rowData = originalData[rowId];
-        else
-          rowData = data[rowId];
 
-        if (cell) {
-          rowData[colId] = newData;
-          cell.innerHTML = newData;
-          data[rowId].html = createRowHtml(rowId, rowData);
+        let $cell = $(`.${yoTablesId}-td-${rowId}-${colId}`);
+        let oldData = $($cell).parent().data('data');
+
+        // console.log(oldData);
+        let rowData;
+        if (originalData.length) {
+          for (let i=0; i < originalData.length; i++) {
+            let v = originalData[i];
+            if (v[0] === oldData[0]) {
+              rowData = originalData[i];
+              break;
+            }
+          }
+        }
+        else {
+          for (let i=0; i < data.length; i++) {
+            let v = data[i];
+            if (v[0] === oldData[0]) {
+              rowData = data[i];
+              break;
+            }
+          }
         }
 
-        // console.log(elClass, cell, data[rowId]);
+        rowData[coords[1]] = newData;
+        $cell.html(newData);
       }
     }
   };
@@ -340,76 +351,69 @@ window.YoTables = function (el, params) {
   this.updateRow = function (coords, newData) {
     if (newData.constructor === Array && newData.length === headers.length) {
       let rowId = coords[0];
-
+      let $cell;
       for (let colId=0; colId < headers.length; colId++) {
-        let elClass = [yoTablesId, 'td', rowId, colId].join('-');
-        let cell = document.querySelector('.'+ elClass);
-        if (cell)
-          cell.innerHTML = newData[colId];
+        $cell = $(`.${yoTablesId}-td-${rowId}-${colId}`);
+        // console.log(newData[colId]);
+        if ($cell)
+          $cell.html(newData[colId])
+      }
+      
+      if ($cell) {
+        let oldData = $($cell).parent().data('data');        
+        if (originalData.length) {
+          for (let i=0; i < originalData.length; i++) {
+            let v = originalData[i];
+            if (v[0] === oldData[0]) {
+              data[i] = newData;
+              break;
+            }
+          }
+        }
+        else {
+          for (let i=0; i < data.length; i++) {
+            let v = data[i];
+            if (v[0] === oldData[0]) {
+              data[i] = newData;
+              break;
+            }
+          }
+        }
+
       }
 
-      if (originalData.length)
-        originalData[rowId] = newData;
-      else
-        data[rowId] = newData;
-
-      renderTable();
+      // renderTable();
     }
   };
 
   this.updateFromHeader = function (headerName, val, newData) {
+    if (newData.length !== headers.length)
+      return;
+
+    let found = false;
+
     // LOOP HEADERS TO GET colId
     for (let colId=0; colId < headers.length; colId++) {
       if (headers[colId].name === headerName) {
 
-        // LOOP DATA TO GET rowId
-        for (let rowId=0; rowId < data.length; rowId++) {
-          if (data[rowId][colId].toString() === val.toString()) {
-
-            // UPDATE ROW'S DATA
-            for (let i=0; i < headers.length; i++) {
-              let elClass = [yoTablesId, 'td', rowId, i].join('-');
-              let cell = document.querySelector(`.${elClass}`);
-              if (cell)
-                cell.innerHTML = newData[i];
-            }
-
-            // UPDATE OBJECT WITH NEW DATA
-            if (originalData.length) {
-              originalData[rowId] = newData;
-            }
-            else {
-              data[rowId] = newData;
-            }
-
+        // console.log(headerName, val, newData);
+        
+        for (let i=0; i < data.length; i++) {
+          let v = data[i];
+          if (v[colId].toString() === val.toString()) {
+            data[i] = newData;
+            found = true;
             break;
           }
         }
-
         break;
       }
     }
-  };
 
-  this.getCell = function (coords) {
-    let rowId = coords[0];
-    let colId = coords[1];
-    let row;
+    // PUSH TO DATA IF NOT FOUND
+    if (autoAdd && !found)
+      data.push(newData);
 
-    if (originalData.length)
-      row = originalData[rowId];
-    else
-      row = data[rowId];
-
-    return row[colId];
-  };
-
-  this.getRow = function (coords) {
-    let rowId = coords[0];
-
-    if (originalData.length)
-      return originalData[rowId];
-    else
-      return data[rowId];
+    renderTable();
   };
 };
