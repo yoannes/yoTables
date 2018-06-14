@@ -1,6 +1,6 @@
 /**
  * @author Yoannes
- * @version 1.0.3
+ * @version 1.0.6
  * @license MIT
  */
 
@@ -18,6 +18,7 @@
  * @param {number}   params.searchable  - Search option in table.
  * @param {number}   params.searchDelay - Delay on search input in ms.
  * @param {number}   params.autoAdd     - Add to data if not found when calling function updateFromHeader.
+ * @param {function} params.customListeners - Custom listeners when rows are rendered.
  */
 window.YoTables = function (el, params) {
   let element = document.querySelector(el);
@@ -36,6 +37,7 @@ window.YoTables = function (el, params) {
   let searchable = params.searchable === true;
   let autoAdd = params.autoAdd !== false;
   let searchDelay = params.searchDelay ? params.searchDelay : 300;
+  let customListeners = params.customListeners ? params.customListeners : null;
 
   let rowsPerPage = 0;
 
@@ -84,7 +86,7 @@ window.YoTables = function (el, params) {
       let tdContent = [colData[colId]];
 
       if (headers[colId].style)
-        tdStyle.push(headers[colId].style.join(';'));
+        tdStyle.push(headers[colId].style);
 
       if (onClick && !headers[colId].disableClick)
         tdStyle.push('cursor: pointer');
@@ -310,6 +312,9 @@ window.YoTables = function (el, params) {
           onClick(coords, dt);
         }
       });
+
+    if (customListeners)
+      customListeners();
   }
 
   this.updateCell = function (coords, newData) {
